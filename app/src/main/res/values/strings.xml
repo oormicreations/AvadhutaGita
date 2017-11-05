@@ -1,13 +1,13 @@
 <resources>
     <string name="app_name">Avadhuta Gita</string>
-    <string name="cover">Ashtavakra Gita</string>
+    <string name="cover">Avadhuta Gita</string>
     <string name="texterror">Error@Invalid Count@Requested verse number exceeds total verses.~Or it could not be read from file.</string>
-    <string name="touchtostart">Touch the Sage to start. Swipe for next/previous.</string>
+    <string name="touchtostart">Touch the Sage to start.</string>
     <string name="nxtremtoast">Next verse in&#160;</string>
     <string name="nxtremmintoast">&#160;minutes</string>
     <string name="errorbadformat">Error : Verse is not correctly formatted.</string>
     <string name="title_activity_settings">Settings</string>
-    <string name="rempaused">Ashtavakra Gita Paused</string>
+    <string name="rempaused">Avadhuta Gita Paused</string>
     <string name="defaultwhosaid">Unknown</string>
     <string name="defaultversenum">Verse Num</string>
     <string name="stopped">Stopped</string>

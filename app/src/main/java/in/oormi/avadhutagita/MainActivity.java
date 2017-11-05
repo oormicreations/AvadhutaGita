@@ -28,6 +28,7 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.ShareActionProvider;
 import android.text.InputType;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -75,6 +76,8 @@ public class MainActivity extends AppCompatActivity implements
     AlarmManager am;
 
     boolean animrunning = false;
+    boolean isTimerOn = false;
+
     private float x1;
     static final int MIN_DISTANCE = 150;
     //static final int MAX_VERSE = 298;
@@ -96,6 +99,9 @@ public class MainActivity extends AppCompatActivity implements
 
         Setup();
         setupTimer();
+
+        //TextView tv4 = (TextView)findViewById(R.id.textViewComments);
+        //tv4.setMovementMethod(new ScrollingMovementMethod());
 
         Verse = 0;
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
@@ -148,6 +154,33 @@ public class MainActivity extends AppCompatActivity implements
                     }
                 });
 
+        ImageButton mbuttonNext = (ImageButton) findViewById(R.id.imageButtonNext);
+        mbuttonNext.setOnClickListener(
+                new View.OnClickListener(){
+                    @Override
+                    public void onClick (View view){
+                        Verse++;
+                        ShowVerse(true);
+                        if (isTimerOn) stopTimer(true);
+                        tvs.setText(getString(R.string.status_user));
+                    }
+                });
+
+        ImageButton mbuttonPrev = (ImageButton) findViewById(R.id.imageButtonPrev);
+        mbuttonPrev.setOnClickListener(
+                new View.OnClickListener(){
+                    @Override
+                    public void onClick (View view){
+                        Verse--;
+                        ShowVerse(true);
+                        if (isTimerOn) stopTimer(true);
+                        tvs.setText(getString(R.string.status_user));
+                    }
+                });
+
+        mbuttonNext.setImageAlpha(127);
+        mbuttonPrev.setImageAlpha(127);
+
     }
 
     public void ShowVerse(boolean sounds){
@@ -155,12 +188,19 @@ public class MainActivity extends AppCompatActivity implements
         TextView tv1 = (TextView)findViewById(R.id.textwhosaid);
         TextView tv2 = (TextView)findViewById(R.id.textversenum);
         TextView tv3 = (TextView)findViewById(R.id.textverse);
+        TextView tv4 = (TextView)findViewById(R.id.textViewComments);
+
+        tv1.setText("");
+        tv2.setText("");
+        tv3.setText("");
+        tv4.setText("");
 
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 //            int c = Color.parseColor("#ffdd00");
 //            tv3.setShadowLayer(60.0f, 0.0f, 0.0f, c);
 //        }
 
+/*
         if(Verse < 1){
             tv1.setText("");
             tv2.setText("");
@@ -169,31 +209,37 @@ public class MainActivity extends AppCompatActivity implements
             tv3.setTextSize(40.0f);
             return;
         }
+*/
 //        tv3.setGravity(Gravity.CENTER_VERTICAL);
 //        tv3.setTextSize(22.0f);
 
-        if((Verse < 0) || (randenable > 0)){
+        if(randenable > 0){
             Random rand = new Random();
             Verse = rand.nextInt(allVerses.size());
         }
 
-        if (Verse > allVerses.size()) Verse = 1;
-        if (Verse < 0) Verse = allVerses.size();
+        if (Verse >= allVerses.size()) Verse = 0;
+        if (Verse < 0) Verse = allVerses.size()-1;
 
-        mLine = allVerses.get(Verse-1);
+        mLine = allVerses.get(Verse);
         if (mLine == null){
             mLine = getString(R.string.texterror);
         }
 
         String[] versecontent;
         versecontent = mLine.split("@");
-        //tv3.setText(mLine);
-//return;
+
         if(versecontent.length > 0) {
-            //versecontent[2] = versecontent[2].replace("~", "\n\n");
             tv1.setText(versecontent[0]);
             if(versecontent.length > 1) tv2.setText(versecontent[1]);
-            if(versecontent.length > 2) tv3.setText(versecontent[2]);
+            if(versecontent.length > 2) {
+                versecontent[2] = versecontent[2].replace("~", "\n");
+                tv3.setText(versecontent[2]);
+            }
+            if(versecontent.length > 3) {
+                versecontent[3] = versecontent[3].replace("~", "\n");
+                tv4.setText(versecontent[3]);
+            }
             if (sounds) {
                 //versecontent[2] = versecontent[2].replace("-", " ");
                 //versecontent[2] = versecontent[2].replace("\n\n", "\n");
@@ -359,6 +405,7 @@ public class MainActivity extends AppCompatActivity implements
             });
             toggle.startAnimation(fade_in);
             animrunning = true;
+            isTimerOn = true;
         }
     }
 
@@ -366,12 +413,14 @@ public class MainActivity extends AppCompatActivity implements
         if(am!=null){
             if(pi!=null){
                 am.cancel(pi);
+                isTimerOn = false;
             }
         }
         if(stopanim) {
             final ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButtonStartStop);
             toggle.clearAnimation();
         }
+
     }
 
     private void setupTimer() {
@@ -444,6 +493,7 @@ public class MainActivity extends AppCompatActivity implements
         }
         return false;
     }
+/*
 
     @Override
     public boolean onTouchEvent(MotionEvent event)
@@ -488,6 +538,7 @@ public class MainActivity extends AppCompatActivity implements
         }
         return super.onTouchEvent(event);
     }
+*/
 
     @Override
     public void onLoadFinished(Loader<String> loader, String data) {
