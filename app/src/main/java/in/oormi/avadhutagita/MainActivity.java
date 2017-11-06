@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.graphics.Typeface;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -82,6 +83,9 @@ public class MainActivity extends AppCompatActivity implements
     //public static String [] allverses = new String[MAX_VERSE];
     public static ArrayList<String> allVerses = new ArrayList<>();
     final int [] chapMap = {76,40,46,25,32,27,15,10};
+    Animation animation1;
+    Animation animation2;
+    Animation animation3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,6 +101,11 @@ public class MainActivity extends AppCompatActivity implements
 
         Setup();
         setupTimer();
+
+
+//        TextView tv1 = (TextView)findViewById(R.id.textwhosaid);
+//        Typeface type = Typeface.createFromAsset(getAssets(),"kokila.ttf");
+//        tv1.setTypeface(type);
 
         Verse = 0;
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
@@ -151,8 +160,8 @@ public class MainActivity extends AppCompatActivity implements
                     }
                 });
 
-        mbuttonNext.setImageAlpha(127);
-        mbuttonPrev.setImageAlpha(127);
+        //mbuttonNext.setImageAlpha(180);
+        //mbuttonPrev.setImageAlpha(180);
 
     }
 
@@ -168,6 +177,7 @@ public class MainActivity extends AppCompatActivity implements
         tv3.setText("");
         tv4.setText("");
 
+
         if(randenable > 0){
             Random rand = new Random();
             Verse = rand.nextInt(allVerses.size());
@@ -179,6 +189,14 @@ public class MainActivity extends AppCompatActivity implements
         mLine = allVerses.get(Verse);
         if (mLine == null){
             mLine = getString(R.string.texterror);
+        }
+
+        if(Verse == 0){
+            tv1.setGravity(Gravity.CENTER);
+            tv1.setTextSize(40.0f);
+        }else {
+            tv1.setGravity(Gravity.CENTER_VERTICAL);
+            tv1.setTextSize(18.0f);
         }
 
         String[] versecontent;
@@ -196,9 +214,11 @@ public class MainActivity extends AppCompatActivity implements
                 tv4.setText(versecontent[3]);
             }
             if (sounds) {
-                //versecontent[2] = versecontent[2].replace("-", " ");
-                //versecontent[2] = versecontent[2].replace("\n\n", "\n");
-                SoundAlert(versecontent[2]);
+                if(versecontent.length > 2) {
+                    versecontent[2] = versecontent[2].replace("-", " ");
+                    versecontent[2] = versecontent[2].replace("\n\n", "\n");
+                    SoundAlert(versecontent[2]);
+                }
             }
             // Store values between instances here
             SharedPreferences preferences = getPreferences(MODE_PRIVATE);
@@ -206,6 +226,11 @@ public class MainActivity extends AppCompatActivity implements
             editor.putInt("LastVerse", Verse); // value to store
             // Commit to storage
             editor.commit();
+
+            tv1.startAnimation(animation1);
+            tv3.startAnimation(animation2);
+            tv4.startAnimation(animation3);
+
         }
         else{
             tv3.setText(R.string.errorbadformat);
@@ -246,6 +271,10 @@ public class MainActivity extends AppCompatActivity implements
         }
         String srandenable = prefs.getString("order_list", "0");
         randenable = Integer.parseInt(srandenable);
+
+        animation1 = AnimationUtils.loadAnimation(MainActivity.this, R.anim.remzoom);
+        animation2 = AnimationUtils.loadAnimation(MainActivity.this, R.anim.fromleft);
+        animation3 = AnimationUtils.loadAnimation(MainActivity.this, R.anim.fromright);
     }
 
     private void SoundAlert(final String speakme){
