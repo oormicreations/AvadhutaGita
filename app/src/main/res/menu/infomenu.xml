@@ -3,16 +3,28 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:title="@string/go_to_verse"
+        android:id="@+id/gotoverse"
+        android:icon="@android:drawable/ic_input_get"
+        android:orderInCategory="101"
+        app:showAsAction="never"/>
+    <item
+        android:title="@string/settings"
+        android:id="@+id/settings"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:orderInCategory="102"
+        app:showAsAction="never"/>
+    <item
         android:title="@string/menu_name_info"
         android:id="@+id/info"
         android:icon="@android:drawable/ic_dialog_info"
-        android:orderInCategory="100"
-        app:showAsAction="always"/>
+        android:orderInCategory="103"
+        app:showAsAction="never"/>
     <item
         android:id="@+id/menu_item_share"
-        app:showAsAction="always"
+        app:showAsAction="never"
         android:title="Share"
-        app:actionProviderClass=
-            "android.support.v7.widget.ShareActionProvider" />
+        android:orderInCategory="104"
+        app:actionProviderClass="android.support.v7.widget.ShareActionProvider" />
 </menu>
 

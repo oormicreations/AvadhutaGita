@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
-import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -27,24 +26,21 @@ import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.ShareActionProvider;
-import android.text.InputType;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.CompoundButton;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -63,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements
     TextToSpeech tts;
     String alerttone;
     boolean alertenable;
+    boolean soundenable;
     boolean vibeenable;
     boolean ttsenable;
     float speechrate;
@@ -84,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements
     int Verse = 0;
     //public static String [] allverses = new String[MAX_VERSE];
     public static ArrayList<String> allVerses = new ArrayList<>();
+    final int [] chapMap = {76,40,46,25,32,27,15,10};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,9 +97,6 @@ public class MainActivity extends AppCompatActivity implements
 
         Setup();
         setupTimer();
-
-        //TextView tv4 = (TextView)findViewById(R.id.textViewComments);
-        //tv4.setMovementMethod(new ScrollingMovementMethod());
 
         Verse = 0;
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
@@ -131,28 +126,6 @@ public class MainActivity extends AppCompatActivity implements
                 }
             }
         });
-
-        ImageButton mbuttonSetting = (ImageButton) findViewById(R.id.imageButtonSettings);
-        mbuttonSetting.setOnClickListener(
-                new View.OnClickListener(){
-                    @Override
-                    public void onClick (View view){
-                        stopTimer(true);
-                        if(toggle.isChecked()) {toggle.toggle();}
-                        //Toast.makeText(MainActivity.this, R.string.rempaused, Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
-                        startActivity(intent);
-                    }
-                });
-
-        ImageButton mbuttonRes = (ImageButton) findViewById(R.id.imageButtonInfo);
-        mbuttonRes.setOnClickListener(
-                new View.OnClickListener(){
-                    @Override
-                    public void onClick (View view){
-                        JumpDialog();
-                    }
-                });
 
         ImageButton mbuttonNext = (ImageButton) findViewById(R.id.imageButtonNext);
         mbuttonNext.setOnClickListener(
@@ -195,24 +168,6 @@ public class MainActivity extends AppCompatActivity implements
         tv3.setText("");
         tv4.setText("");
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-//            int c = Color.parseColor("#ffdd00");
-//            tv3.setShadowLayer(60.0f, 0.0f, 0.0f, c);
-//        }
-
-/*
-        if(Verse < 1){
-            tv1.setText("");
-            tv2.setText("");
-            tv3.setText(mLine);
-            tv3.setGravity(Gravity.CENTER);
-            tv3.setTextSize(40.0f);
-            return;
-        }
-*/
-//        tv3.setGravity(Gravity.CENTER_VERTICAL);
-//        tv3.setTextSize(22.0f);
-
         if(randenable > 0){
             Random rand = new Random();
             Verse = rand.nextInt(allVerses.size());
@@ -243,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements
             if (sounds) {
                 //versecontent[2] = versecontent[2].replace("-", " ");
                 //versecontent[2] = versecontent[2].replace("\n\n", "\n");
-                //SoundAlert(versecontent[2]);
+                SoundAlert(versecontent[2]);
             }
             // Store values between instances here
             SharedPreferences preferences = getPreferences(MODE_PRIVATE);
@@ -269,11 +224,15 @@ public class MainActivity extends AppCompatActivity implements
 
         alerttone = prefs.getString("notifications_new_message_ringtone",
                 "content://settings/system/notification_sound");
+        soundenable = prefs.getBoolean("notifications_tone", false);
         alertenable = prefs.getBoolean("notifications_new_message", true);
         vibeenable = prefs.getBoolean("notifications_new_message_vibrate", false);
         ttsenable = prefs.getBoolean("notifications_new_message_speak", true);
 
-        speechrate = 0.9f;//prefs.getBoolean("notifications_new_message_tts", false);
+        speechrate = 1.0f;
+        String strrate = prefs.getString("rate_list", "1.0");
+        if ((strrate!=null)&&(strrate.length()>0)) speechrate = Float.parseFloat(strrate);
+
         String remfreqstr = prefs.getString("freq_list", "60");
         if (remfreqstr.length()<1) remfreqstr = "60";
         freq = 60 * Integer.parseInt(remfreqstr);
@@ -287,37 +246,20 @@ public class MainActivity extends AppCompatActivity implements
         }
         String srandenable = prefs.getString("order_list", "0");
         randenable = Integer.parseInt(srandenable);
-
-        //setupTimer();
-/*
-        alert = getAlarms.getString("notifications_new_message_ringtone", "notset");
-        if(alert.equals("notset")){
-            AlertDialog.Builder dlgAlert  = new AlertDialog.Builder(MainActivity.this);
-            dlgAlert.setMessage("Please set a notification tone.");
-            dlgAlert.setTitle("Set a sound");
-            dlgAlert.setPositiveButton("Ok",
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            //Intent intent = new Intent(MainActivity.this, SettingsActivity2.class);
-                            //startActivity(intent);
-                        }
-                    });
-            dlgAlert.create().show();
-
-        }
-*/
-
     }
 
     private void SoundAlert(final String speakme){
         if (alertenable) {
-            Uri uri = Uri.parse(alerttone);
-            PlayAlert(this, uri);
+            if (soundenable) {
+                Uri uri = Uri.parse(alerttone);
+                PlayAlert(this, uri);
+            }
 
             if (vibeenable) {
                 Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                 v.vibrate(500);
             }
+
             if (ttsenable) {
                 tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
 
@@ -608,7 +550,8 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    public void JumpDialog(){
+    private void gotoDialog() {
+
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 
         LinearLayout layout = new LinearLayout(this);
@@ -621,20 +564,34 @@ public class MainActivity extends AppCompatActivity implements
         layout.setGravity(Gravity.CLIP_VERTICAL);
         layout.setPadding(10,10,10,10);
 
-        TextView tv = new TextView(this);
+        final TextView tv = new TextView(this);
         tv.setText(R.string.jumptitle);
         tv.setPadding(40, 40, 40, 40);
         tv.setGravity(Gravity.CENTER);
         tv.setTextSize(20);
 
-        final EditText et = new EditText(this);
-        et.setInputType(InputType.TYPE_CLASS_NUMBER);
-        et.setHint(R.string.jumprange);
-        et.setGravity(Gravity.CENTER);
-        layout.addView(et);
-
         alertDialogBuilder.setView(layout);
         alertDialogBuilder.setCustomTitle(tv);
+
+        final TextView tvChapter = new TextView(this);
+        tvChapter.setText(R.string.gotochapter);
+        tvChapter.setPadding(80,10,10,10);
+        layout.addView(tvChapter);
+
+        final SeekBar chapterBar = new SeekBar(this);
+        chapterBar.setMax(7);
+        chapterBar.setProgress(0);
+        layout.addView(chapterBar);
+
+        final TextView tvVerse = new TextView(this);
+        tvVerse.setText(R.string.versenum);
+        tvVerse.setPadding(80,10,10,10);
+        layout.addView(tvVerse);
+
+        final SeekBar verseBar = new SeekBar(this);
+        verseBar.setMax(75);
+        verseBar.setProgress(0);
+        layout.addView(verseBar);
 
         alertDialogBuilder.setNegativeButton(R.string.jumpcancel, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
@@ -643,22 +600,66 @@ public class MainActivity extends AppCompatActivity implements
         });
 
         alertDialogBuilder.setPositiveButton(R.string.jumpok, new DialogInterface.OnClickListener() {
+            @Override
             public void onClick(DialogInterface dialog, int which) {
-                String etStr = et.getText().toString();
-                if (etStr.length()>0){
-                    Verse = Integer.parseInt(etStr);
-                    ShowVerse(true);
-                }
+                setGotoVerse(chapterBar.getProgress(), verseBar.getProgress());
+                ShowVerse(true);
             }
         });
 
-        AlertDialog alertDialog = alertDialogBuilder.create();
+        chapterBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                tvChapter.setText(getString(R.string.gotochapter)+ " " + String.valueOf(progress+1));
+                verseBar.setMax(chapMap[progress] - 1);
+                verseBar.setProgress(0);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        verseBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                tvVerse.setText(getString(R.string.versenum) + " " + String.valueOf(progress+1));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+
+        AlertDialog edSetDialog = alertDialogBuilder.create();
+        tvVerse.setText(getString(R.string.versenum) + " 1");
+        tvChapter.setText(getString(R.string.gotochapter) + " 1");
 
         try {
-            alertDialog.show();
+            edSetDialog.show();
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+    }
+
+    private void setGotoVerse(int nchap, int nverse) {
+        int skip = 0;
+        for (int c=0;c<nchap;c++) skip = skip + chapMap[c];
+        Verse = 4 + skip + nverse + 2*nchap;
     }
 
     private ShareActionProvider mShareActionProvider;
@@ -691,10 +692,16 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.gotoverse:
+                gotoDialog();
+                break;
             case R.id.info:
-                //Toast.makeText(this, "Menu Item 1 selected", Toast.LENGTH_SHORT).show();
-                Intent i = new Intent(this, ResourceShow.class);
-                startActivity(i);
+                Intent resIntent = new Intent(this, ResourceShow.class);
+                startActivity(resIntent);
+                break;
+            case R.id.settings:
+                Intent setIntent = new Intent(this, SettingsActivity.class);
+                startActivity(setIntent);
                 break;
         }
         return true;
