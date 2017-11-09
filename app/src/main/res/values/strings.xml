@@ -13,7 +13,7 @@
     <string name="stopped">Stopped</string>
     <string name="status_auto">Auto Reading</string>
     <string name="status_user">User Reading</string>
-    <string name="status_sch">Reading as scheduled</string>
+    <string name="status_sch">Reading every</string>
     <string name="jumptitle">Jump to Verse</string>
     <string name="jumprange">Verse #</string>
     <string name="jumpcancel">Cancel</string>
@@ -31,6 +31,7 @@
 
     <string name="pref_title_add_friends_to_messages">Frequency</string>
     <string-array name="pref_example_list_titles">
+        <item>Every 20 Seconds</item>
         <item>Every 10 mins</item>
         <item>Every 20 mins</item>
         <item>Every 30 mins</item>
@@ -40,6 +41,7 @@
         <item>Once a day</item>
     </string-array>
     <string-array name="pref_example_list_values">
+        <item>0</item>
         <item>10</item>
         <item>20</item>
         <item>30</item>
@@ -66,9 +68,33 @@
         <item>Faster</item>
     </string-array>
     <string-array name="pref_rate_values">
-        <item>0.85</item>
-        <item>1.0</item>
-        <item>1.25</item>
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <string name="pref_locale">Locale</string>
+    <string-array name="pref_locale_titles">
+        <item>Default</item>
+        <item>EN-US</item>
+        <item>EN-UK</item>
+    </string-array>
+    <string-array name="pref_locale_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <string name="pref_lang">Languages</string>
+    <string-array name="pref_lang_titles">
+        <item>Sanskrit</item>
+        <item>English</item>
+        <item>Both</item>
+    </string-array>
+    <string-array name="pref_lang_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
     </string-array>
 
     <!-- Example settings for Data & Sync -->
@@ -93,6 +119,8 @@
     <string name="gotochapter">Chapter # </string>
     <string name="versenum">Verse # </string>
     <string name="pref_title_tone">Sound</string>
+    <string name="ttswelcome">Reading</string>
+    <string name="autoreadtimedisp">20 seconds</string>
 
 
 </resources>

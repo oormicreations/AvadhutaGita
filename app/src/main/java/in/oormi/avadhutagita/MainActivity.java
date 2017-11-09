@@ -41,6 +41,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -57,8 +58,12 @@ import java.util.Random;
 public class MainActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<String> {
 
-    TextToSpeech tts;
+    TextToSpeech tts, ttsHindi;
+
     String alerttone;
+    String freqStr;
+    Locale locale;
+
     boolean alertenable;
     boolean soundenable;
     boolean vibeenable;
@@ -68,6 +73,7 @@ public class MainActivity extends AppCompatActivity implements
     boolean nonightrem;
     boolean automode;
     int randenable = 0;
+    int lang = 2;
 
     PendingIntent pi;
     BroadcastReceiver br;
@@ -78,14 +84,18 @@ public class MainActivity extends AppCompatActivity implements
 
     private float x1;
     static final int MIN_DISTANCE = 150;
-    //static final int MAX_VERSE = 298;
+
     int Verse = 0;
-    //public static String [] allverses = new String[MAX_VERSE];
     public static ArrayList<String> allVerses = new ArrayList<>();
     final int [] chapMap = {76,40,46,25,32,27,15,10};
+
     Animation animation1;
     Animation animation2;
     Animation animation3;
+    Animation animation4;
+
+    TextView tv1, tv2, tv3, tv4;
+    ScrollView sv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements
         Verse = 0;
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
         Verse = preferences.getInt("LastVerse", 0); //restart at the last verse
-        ShowVerse(false);
+        ShowVerse(true);
         //Toast.makeText(MainActivity.this, R.string.touchtostart, Toast.LENGTH_LONG).show();
         final TextView tvs = (TextView)findViewById(R.id.textstatus);
 
@@ -126,37 +136,40 @@ public class MainActivity extends AppCompatActivity implements
                     if (automode) {
                         tvs.setText(R.string.status_auto);
                     } else {
-                        tvs.setText(R.string.status_sch);
+                        tvs.setText("Reading every " + freqStr);
                     }
                 } else {
                     stopTimer(true);
                     toggle.clearAnimation();
                     tvs.setText(R.string.touchtostart);
+                    //tts.stop();
                 }
             }
         });
 
-        ImageButton mbuttonNext = (ImageButton) findViewById(R.id.imageButtonNext);
+        final ImageButton mbuttonNext = (ImageButton) findViewById(R.id.imageButtonNext);
         mbuttonNext.setOnClickListener(
                 new View.OnClickListener(){
                     @Override
                     public void onClick (View view){
                         Verse++;
                         ShowVerse(true);
-                        if (isTimerOn) stopTimer(true);
-                        tvs.setText(getString(R.string.status_user));
+                        //if (isTimerOn) stopTimer(true);
+                        //tvs.setText(getString(R.string.status_user));
+                        mbuttonNext.startAnimation(animation4);
                     }
                 });
 
-        ImageButton mbuttonPrev = (ImageButton) findViewById(R.id.imageButtonPrev);
+        final ImageButton mbuttonPrev = (ImageButton) findViewById(R.id.imageButtonPrev);
         mbuttonPrev.setOnClickListener(
                 new View.OnClickListener(){
                     @Override
                     public void onClick (View view){
                         Verse--;
                         ShowVerse(true);
-                        if (isTimerOn) stopTimer(true);
-                        tvs.setText(getString(R.string.status_user));
+                        //if (isTimerOn) stopTimer(true);
+                        //tvs.setText(getString(R.string.status_user));
+                        mbuttonPrev.startAnimation(animation4);
                     }
                 });
 
@@ -167,16 +180,12 @@ public class MainActivity extends AppCompatActivity implements
 
     public void ShowVerse(boolean sounds){
         String mLine = getString(R.string.cover);
-        TextView tv1 = (TextView)findViewById(R.id.textwhosaid);
-        TextView tv2 = (TextView)findViewById(R.id.textversenum);
-        TextView tv3 = (TextView)findViewById(R.id.textverse);
-        TextView tv4 = (TextView)findViewById(R.id.textViewComments);
-
         tv1.setText("");
         tv2.setText("");
         tv3.setText("");
         tv4.setText("");
 
+        sv.scrollTo(0, 0);
 
         if(randenable > 0){
             Random rand = new Random();
@@ -193,31 +202,42 @@ public class MainActivity extends AppCompatActivity implements
 
         if(Verse == 0){
             tv1.setGravity(Gravity.CENTER);
-            tv1.setTextSize(40.0f);
+            tv1.setTextSize(30.0f);
         }else {
             tv1.setGravity(Gravity.CENTER_VERTICAL);
-            tv1.setTextSize(18.0f);
+            tv1.setTextSize(16.0f);
         }
 
-        String[] versecontent;
-        versecontent = mLine.split("@");
+        String[] verseContent;
+        verseContent = mLine.split("@");
 
-        if(versecontent.length > 0) {
-            tv1.setText(versecontent[0]);
-            if(versecontent.length > 1) tv2.setText(versecontent[1]);
-            if(versecontent.length > 2) {
-                versecontent[2] = versecontent[2].replace("~", "\n");
-                tv3.setText(versecontent[2]);
+        if(verseContent.length > 0) {
+            tv1.setText(verseContent[0]);
+            if(verseContent.length > 1) tv2.setText(verseContent[1]);
+            if(verseContent.length > 2) {
+                verseContent[2] = verseContent[2].replace("~", "\n");
+                tv3.setText(verseContent[2]);
             }
-            if(versecontent.length > 3) {
-                versecontent[3] = versecontent[3].replace("~", "\n");
-                tv4.setText(versecontent[3]);
+            if(verseContent.length > 3) {
+                verseContent[3] = verseContent[3].replace("~", "\n");
+                tv4.setText(verseContent[3]);
             }
-            if (sounds) {
-                if(versecontent.length > 2) {
-                    versecontent[2] = versecontent[2].replace("-", " ");
-                    versecontent[2] = versecontent[2].replace("\n\n", "\n");
-                    SoundAlert(versecontent[2]);
+            if ((sounds) && (Verse>2)) {
+                if(verseContent.length > 2)  {
+                    if (verseContent[2].length() > 26 ) {//do not speak chapter pages
+                        if ((lang==0)|| (lang==2)) {
+                            verseContent[0] = verseContent[0].subSequence(0, verseContent[0].indexOf("।।")).toString();
+                            //verseContent[0] = verseContent[0].replace(" ",",");
+                            verseContent[0] = verseContent[0].replace("।"," ");
+                            verseContent[0] = verseContent[0].replace("\n",". \n");
+                            SoundAlert(verseContent[0], true);
+                        }
+                        if ((lang==1)|| (lang==2)) {
+                            SoundAlert(verseContent[2], false);
+                            verseContent[2] = verseContent[2].replace("-", " ");
+                            verseContent[2] = verseContent[2].replace("\n\n", "\n");
+                        }
+                    }
                 }
             }
             // Store values between instances here
@@ -255,15 +275,36 @@ public class MainActivity extends AppCompatActivity implements
         ttsenable = prefs.getBoolean("notifications_new_message_speak", true);
 
         speechrate = 1.0f;
-        String strrate = prefs.getString("rate_list", "1.0");
-        if ((strrate!=null)&&(strrate.length()>0)) speechrate = Float.parseFloat(strrate);
+        String strrate = prefs.getString("rate_list", "1");
+        if ((strrate==null)||(strrate.length()<1)) strrate = "1";
+        if (strrate.equals("0")) speechrate = 0.85f;
+        if (strrate.equals("1")) speechrate = 1.0f;
+        if (strrate.equals("2")) speechrate = 1.25f;
 
-        String remfreqstr = prefs.getString("freq_list", "60");
-        if (remfreqstr.length()<1) remfreqstr = "60";
-        freq = 60 * Integer.parseInt(remfreqstr);
-        //freq = 10; //testing
+        String localestr = prefs.getString("locale_list", "0");
+        if ((localestr==null)||(localestr.length()<1)) localestr = "0";
+        if (localestr.equals("0")) locale = Locale.getDefault();
+        if (localestr.equals("1")) locale = Locale.US;
+        if (localestr.equals("2")) locale = Locale.UK;
+
+        String langstr = prefs.getString("lang_list", "2");
+        if ((langstr==null)||(langstr.length()<1)) langstr = "2";
+        if (langstr.equals("0")) lang = 0;
+        if (langstr.equals("1")) lang = 1;
+        if (langstr.equals("2")) lang = 2;
+
+        freqStr = prefs.getString("freq_list", "60");
+        if (freqStr.length()<1) freqStr = "60";
+        freq = 60 * Integer.parseInt(freqStr);
+        freqStr = freqStr + getString(R.string.nxtremmintoast);
 
         nonightrem = prefs.getBoolean("night_switch", true);
+        if (freq<1) {
+            freq = 20;
+            freqStr = getString(R.string.autoreadtimedisp);
+            nonightrem = false;//autoread in night too
+        }
+
         automode = prefs.getBoolean("auto_switch", false);
         if (automode) {
             nonightrem = false;//autoread in night too
@@ -275,9 +316,37 @@ public class MainActivity extends AppCompatActivity implements
         animation1 = AnimationUtils.loadAnimation(MainActivity.this, R.anim.remzoom);
         animation2 = AnimationUtils.loadAnimation(MainActivity.this, R.anim.fromleft);
         animation3 = AnimationUtils.loadAnimation(MainActivity.this, R.anim.fromright);
+        animation4 = AnimationUtils.loadAnimation(MainActivity.this, R.anim.press);
+
+ /*       if (ttsenable) {
+            tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+                @Override
+                public void onInit(int status) {
+                    if (status == TextToSpeech.SUCCESS) {
+                        int result = tts.setLanguage(Locale.UK);
+                        if (result == TextToSpeech.LANG_MISSING_DATA ||
+                                result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                            Log.e("TTS Error", "This language is not supported");
+                        } else {
+                            tts.setSpeechRate(speechrate);
+                            //tts.speak(getString(R.string.ttswelcome), TextToSpeech.QUEUE_FLUSH, null,
+                            //        TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+                        }
+                    } else
+                        Log.e("TTS Error", "Initialization Failed!");
+                }
+            });
+        }*/
+
+        tv1 = (TextView)findViewById(R.id.textwhosaid);
+        tv2 = (TextView)findViewById(R.id.textversenum);
+        tv3 = (TextView)findViewById(R.id.textverse);
+        tv4 = (TextView)findViewById(R.id.textViewComments);
+        sv = (ScrollView)findViewById(R.id.scrollViewVc);
+
     }
 
-    private void SoundAlert(final String speakme){
+    private void SoundAlert(final String speakme, final boolean hindi){
         if (alertenable) {
             if (soundenable) {
                 Uri uri = Uri.parse(alerttone);
@@ -290,24 +359,47 @@ public class MainActivity extends AppCompatActivity implements
             }
 
             if (ttsenable) {
-                tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+                if (hindi) {
+                    ttsHindi = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
 
-                    @Override
-                    public void onInit(int status) {
-                        if (status == TextToSpeech.SUCCESS) {
-                            int result = tts.setLanguage(Locale.UK);
-                            if (result == TextToSpeech.LANG_MISSING_DATA ||
-                                    result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                                Log.e("TTS Error", "This language is not supported");
-                            } else {
-                                tts.setSpeechRate(speechrate);
-                                tts.speak(speakme, TextToSpeech.QUEUE_FLUSH, null,
-                                        TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
-                            }
-                        } else
-                            Log.e("TTS Error", "Initialization Failed!");
-                    }
-                });
+                        @Override
+                        public void onInit(int status) {
+                            if (status == TextToSpeech.SUCCESS) {
+                                Locale loc = Locale.forLanguageTag("hi-IN");
+                                int result = ttsHindi.setLanguage(loc);
+                                if (result == TextToSpeech.LANG_MISSING_DATA ||
+                                        result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                                    Log.e("TTS Error", "This language is not supported");
+                                } else {
+                                    ttsHindi.setSpeechRate(speechrate);
+                                    ttsHindi.speak(speakme, TextToSpeech.QUEUE_FLUSH, null,
+                                            TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+                                }
+                            } else
+                                Log.e("TTS Error", "Initialization Failed!");
+                        }
+                    });
+                } else {
+                    tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+
+                        @Override
+                        public void onInit(int status) {
+                            if (status == TextToSpeech.SUCCESS) {
+                                int result = tts.setLanguage(locale);
+                                if (result == TextToSpeech.LANG_MISSING_DATA ||
+                                        result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                                    Log.e("TTS Error", "This language is not supported");
+                                } else {
+                                    tts.setSpeechRate(speechrate);
+                                    tts.speak(speakme, TextToSpeech.QUEUE_FLUSH, null,
+                                            TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+                                }
+                            } else
+                                Log.e("TTS Error", "Initialization Failed!");
+                        }
+                    });
+                }
+
             }
         }
     }
@@ -442,6 +534,9 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
+        if (tts!=null)tts.shutdown();
+        if (ttsHindi!=null)ttsHindi.shutdown();
+
         if(am!=null){
             if(pi!=null){
                 am.cancel(pi);

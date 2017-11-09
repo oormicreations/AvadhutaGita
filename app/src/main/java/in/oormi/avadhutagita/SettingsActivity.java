@@ -226,6 +226,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // guidelines.
             bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
             bindPreferenceSummaryToValue(findPreference("rate_list"));
+            bindPreferenceSummaryToValue(findPreference("locale_list"));
+            bindPreferenceSummaryToValue(findPreference("lang_list"));
         }
 
         @Override
