@@ -2,7 +2,7 @@
     <string name="app_name">Avadhuta Gita</string>
     <string name="cover">Avadhuta Gita</string>
     <string name="texterror">Error@Invalid Count@Requested verse number exceeds total verses.~Or it could not be read from file.</string>
-    <string name="touchtostart">Touch the Sage to start.</string>
+    <string name="touchtostart">Touch the Sage to start. Or use arrows.</string>
     <string name="nxtremtoast">Next verse in&#160;</string>
     <string name="nxtremmintoast">&#160;minutes</string>
     <string name="errorbadformat">Error : Verse is not correctly formatted.</string>
@@ -121,6 +121,9 @@
     <string name="pref_title_tone">Sound</string>
     <string name="ttswelcome">Reading</string>
     <string name="autoreadtimedisp">20 seconds</string>
+    <string name="menu_mute">Mute</string>
+    <string name="shareSubject">Avadhuta Gita Reader App</string>
+    <string name="reading">Reading every :</string>
 
 
 </resources>

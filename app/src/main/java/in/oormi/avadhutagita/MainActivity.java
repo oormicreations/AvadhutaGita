@@ -82,12 +82,12 @@ public class MainActivity extends AppCompatActivity implements
     boolean animrunning = false;
     boolean isTimerOn = false;
 
-    private float x1;
-    static final int MIN_DISTANCE = 150;
+//    private float x1;
+//    static final int MIN_DISTANCE = 150;
 
     int Verse = 0;
     public static ArrayList<String> allVerses = new ArrayList<>();
-    final int [] chapMap = {76,40,46,25,32,27,15,10};
+    final int[] chapMap = {76, 40, 46, 25, 32, 27, 15, 10};
 
     Animation animation1;
     Animation animation2;
@@ -103,26 +103,27 @@ public class MainActivity extends AppCompatActivity implements
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main);
 
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
 
-        getSupportLoaderManager().initLoader(1, null, (LoaderManager.LoaderCallbacks<String>)this).forceLoad();
+        getSupportLoaderManager().initLoader(1, null,
+                (LoaderManager.LoaderCallbacks<String>) this).forceLoad();
 
         Setup();
         setupTimer();
 
 
-//        TextView tv1 = (TextView)findViewById(R.id.textwhosaid);
-//        Typeface type = Typeface.createFromAsset(getAssets(),"kokila.ttf");
-//        tv1.setTypeface(type);
+        TextView tv1 = (TextView)findViewById(R.id.textwhosaid);
+        Typeface type = Typeface.createFromAsset(getAssets(),"Sanskrit.ttf");
+        tv1.setTypeface(type);
 
         Verse = 0;
-        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
-        Verse = preferences.getInt("LastVerse", 0); //restart at the last verse
-        ShowVerse(true);
+        //SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+        //Verse = preferences.getInt("LastVerse", 0); //restart at the last verse
+        //ShowVerse(true);
         //Toast.makeText(MainActivity.this, R.string.touchtostart, Toast.LENGTH_LONG).show();
-        final TextView tvs = (TextView)findViewById(R.id.textstatus);
+        final TextView tvs = (TextView) findViewById(R.id.textstatus);
 
         final ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButtonStartStop);
         toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -136,12 +137,13 @@ public class MainActivity extends AppCompatActivity implements
                     if (automode) {
                         tvs.setText(R.string.status_auto);
                     } else {
-                        tvs.setText("Reading every " + freqStr);
+                        tvs.setText(getString(R.string.reading) + freqStr);
                     }
                 } else {
                     stopTimer(true);
                     toggle.clearAnimation();
                     tvs.setText(R.string.touchtostart);
+                    StopTTS();
                     //tts.stop();
                 }
             }
@@ -149,9 +151,9 @@ public class MainActivity extends AppCompatActivity implements
 
         final ImageButton mbuttonNext = (ImageButton) findViewById(R.id.imageButtonNext);
         mbuttonNext.setOnClickListener(
-                new View.OnClickListener(){
+                new View.OnClickListener() {
                     @Override
-                    public void onClick (View view){
+                    public void onClick(View view) {
                         Verse++;
                         ShowVerse(true);
                         //if (isTimerOn) stopTimer(true);
@@ -162,9 +164,9 @@ public class MainActivity extends AppCompatActivity implements
 
         final ImageButton mbuttonPrev = (ImageButton) findViewById(R.id.imageButtonPrev);
         mbuttonPrev.setOnClickListener(
-                new View.OnClickListener(){
+                new View.OnClickListener() {
                     @Override
-                    public void onClick (View view){
+                    public void onClick(View view) {
                         Verse--;
                         ShowVerse(true);
                         //if (isTimerOn) stopTimer(true);
@@ -178,7 +180,11 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 
-    public void ShowVerse(boolean sounds){
+    public void ShowVerse(boolean sounds) {
+        if (allVerses.size() < 1) return;
+
+        StopTTS();
+
         String mLine = getString(R.string.cover);
         tv1.setText("");
         tv2.setText("");
@@ -187,23 +193,23 @@ public class MainActivity extends AppCompatActivity implements
 
         sv.scrollTo(0, 0);
 
-        if(randenable > 0){
+        if (randenable > 0) {
             Random rand = new Random();
             Verse = rand.nextInt(allVerses.size());
         }
 
         if (Verse >= allVerses.size()) Verse = 0;
-        if (Verse < 0) Verse = allVerses.size()-1;
+        if (Verse < 0) Verse = allVerses.size() - 1;
 
         mLine = allVerses.get(Verse);
-        if (mLine == null){
+        if (mLine == null) {
             mLine = getString(R.string.texterror);
         }
 
-        if(Verse == 0){
+        if (Verse == 0) {
             tv1.setGravity(Gravity.CENTER);
             tv1.setTextSize(30.0f);
-        }else {
+        } else {
             tv1.setGravity(Gravity.CENTER_VERTICAL);
             tv1.setTextSize(16.0f);
         }
@@ -211,31 +217,33 @@ public class MainActivity extends AppCompatActivity implements
         String[] verseContent;
         verseContent = mLine.split("@");
 
-        if(verseContent.length > 0) {
+        if (verseContent.length > 0) {
             tv1.setText(verseContent[0]);
-            if(verseContent.length > 1) tv2.setText(verseContent[1]);
-            if(verseContent.length > 2) {
+            if (verseContent.length > 1) tv2.setText(verseContent[1]);
+            if (verseContent.length > 2) {
                 verseContent[2] = verseContent[2].replace("~", "\n");
                 tv3.setText(verseContent[2]);
             }
-            if(verseContent.length > 3) {
+            if (verseContent.length > 3) {
                 verseContent[3] = verseContent[3].replace("~", "\n");
                 tv4.setText(verseContent[3]);
             }
-            if ((sounds) && (Verse>2)) {
-                if(verseContent.length > 2)  {
-                    if (verseContent[2].length() > 26 ) {//do not speak chapter pages
-                        if ((lang==0)|| (lang==2)) {
-                            verseContent[0] = verseContent[0].subSequence(0, verseContent[0].indexOf("।।")).toString();
-                            //verseContent[0] = verseContent[0].replace(" ",",");
-                            verseContent[0] = verseContent[0].replace("।"," ");
-                            verseContent[0] = verseContent[0].replace("\n",". \n");
+            if ((sounds) && (Verse > 2)) {
+                if (verseContent.length > 2) {
+                    if (verseContent[2].length() > 26) {//do not speak chapter pages
+                        if ((lang == 0) || (lang == 2)) {
+                            int endIndex = verseContent[0].indexOf("।।");
+                            if (endIndex >= 0) {
+                                verseContent[0] = verseContent[0].subSequence(0, endIndex).toString();
+                                verseContent[0] = verseContent[0].replace("।", " ");
+                            }
+                            verseContent[0] = verseContent[0].replace("\n", ". \n");
                             SoundAlert(verseContent[0], true);
                         }
-                        if ((lang==1)|| (lang==2)) {
-                            SoundAlert(verseContent[2], false);
+                        if ((lang == 1) || (lang == 2)) {
                             verseContent[2] = verseContent[2].replace("-", " ");
                             verseContent[2] = verseContent[2].replace("\n\n", "\n");
+                            SoundAlert(verseContent[2], false);
                         }
                     }
                 }
@@ -251,15 +259,14 @@ public class MainActivity extends AppCompatActivity implements
             tv3.startAnimation(animation2);
             tv4.startAnimation(animation3);
 
-        }
-        else{
+        } else {
             tv3.setText(R.string.errorbadformat);
         }
 
 
     }
 
-    private void Setup(){
+    private void Setup() {
         PreferenceManager.setDefaultValues(this, R.xml.pref_data_sync, false);
         PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
         PreferenceManager.setDefaultValues(this, R.xml.pref_headers, false);
@@ -276,30 +283,30 @@ public class MainActivity extends AppCompatActivity implements
 
         speechrate = 1.0f;
         String strrate = prefs.getString("rate_list", "1");
-        if ((strrate==null)||(strrate.length()<1)) strrate = "1";
+        if ((strrate == null) || (strrate.length() < 1)) strrate = "1";
         if (strrate.equals("0")) speechrate = 0.85f;
         if (strrate.equals("1")) speechrate = 1.0f;
         if (strrate.equals("2")) speechrate = 1.25f;
 
         String localestr = prefs.getString("locale_list", "0");
-        if ((localestr==null)||(localestr.length()<1)) localestr = "0";
+        if ((localestr == null) || (localestr.length() < 1)) localestr = "0";
         if (localestr.equals("0")) locale = Locale.getDefault();
         if (localestr.equals("1")) locale = Locale.US;
         if (localestr.equals("2")) locale = Locale.UK;
 
         String langstr = prefs.getString("lang_list", "2");
-        if ((langstr==null)||(langstr.length()<1)) langstr = "2";
+        if ((langstr == null) || (langstr.length() < 1)) langstr = "2";
         if (langstr.equals("0")) lang = 0;
         if (langstr.equals("1")) lang = 1;
         if (langstr.equals("2")) lang = 2;
 
         freqStr = prefs.getString("freq_list", "60");
-        if (freqStr.length()<1) freqStr = "60";
+        if (freqStr.length() < 1) freqStr = "60";
         freq = 60 * Integer.parseInt(freqStr);
         freqStr = freqStr + getString(R.string.nxtremmintoast);
 
         nonightrem = prefs.getBoolean("night_switch", true);
-        if (freq<1) {
+        if (freq < 1) {
             freq = 20;
             freqStr = getString(R.string.autoreadtimedisp);
             nonightrem = false;//autoread in night too
@@ -338,15 +345,15 @@ public class MainActivity extends AppCompatActivity implements
             });
         }*/
 
-        tv1 = (TextView)findViewById(R.id.textwhosaid);
-        tv2 = (TextView)findViewById(R.id.textversenum);
-        tv3 = (TextView)findViewById(R.id.textverse);
-        tv4 = (TextView)findViewById(R.id.textViewComments);
-        sv = (ScrollView)findViewById(R.id.scrollViewVc);
+        tv1 = (TextView) findViewById(R.id.textwhosaid);
+        tv2 = (TextView) findViewById(R.id.textversenum);
+        tv3 = (TextView) findViewById(R.id.textverse);
+        tv4 = (TextView) findViewById(R.id.textViewComments);
+        sv = (ScrollView) findViewById(R.id.scrollViewVc);
 
     }
 
-    private void SoundAlert(final String speakme, final boolean hindi){
+    private void SoundAlert(final String speakme, final boolean hindi) {
         if (alertenable) {
             if (soundenable) {
                 Uri uri = Uri.parse(alerttone);
@@ -365,15 +372,22 @@ public class MainActivity extends AppCompatActivity implements
                         @Override
                         public void onInit(int status) {
                             if (status == TextToSpeech.SUCCESS) {
-                                Locale loc = Locale.forLanguageTag("hi-IN");
+                                Locale loc = null;
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                    loc = Locale.forLanguageTag("hi-IN");
+                                }
                                 int result = ttsHindi.setLanguage(loc);
                                 if (result == TextToSpeech.LANG_MISSING_DATA ||
                                         result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                                    Log.e("TTS Error", "This language is not supported");
+                                    Log.e("TTS Error", "Language 0 is not supported");
                                 } else {
                                     ttsHindi.setSpeechRate(speechrate);
-                                    ttsHindi.speak(speakme, TextToSpeech.QUEUE_FLUSH, null,
-                                            TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                        ttsHindi.speak(speakme, TextToSpeech.QUEUE_FLUSH, null,
+                                                TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+                                    }else {
+                                        ttsHindi.speak(speakme, TextToSpeech.QUEUE_ADD, null);
+                                    }
                                 }
                             } else
                                 Log.e("TTS Error", "Initialization Failed!");
@@ -388,11 +402,15 @@ public class MainActivity extends AppCompatActivity implements
                                 int result = tts.setLanguage(locale);
                                 if (result == TextToSpeech.LANG_MISSING_DATA ||
                                         result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                                    Log.e("TTS Error", "This language is not supported");
+                                    Log.e("TTS Error", "Language 1 is not supported");
                                 } else {
                                     tts.setSpeechRate(speechrate);
-                                    tts.speak(speakme, TextToSpeech.QUEUE_FLUSH, null,
-                                            TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                        tts.speak(speakme, TextToSpeech.QUEUE_FLUSH, null,
+                                                TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+                                    }else {
+                                        tts.speak(speakme, TextToSpeech.QUEUE_ADD, null);
+                                    }
                                 }
                             } else
                                 Log.e("TTS Error", "Initialization Failed!");
@@ -421,31 +439,51 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    protected void onPause()
-    {
+    protected void onPause() {
+        SharedPreferences preferences = getSharedPreferences("TimerOn", MODE_PRIVATE);
+        isTimerOn = preferences.getBoolean("TimerOn", false);
+        //Log.d("TIMER", "Timer is " + String.valueOf(isTimerOn));
+
+        if (!isTimerOn) StopTTS(); //stop if user closes app and timer not running
+
         super.onPause();
+    }
+
+    private void StopTTS() {
+        if (tts != null) {
+            tts.stop();
+        }
+        if (ttsHindi != null) {
+            ttsHindi.stop();
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+//        SharedPreferences preferences = getSharedPreferences("TimerOn", MODE_PRIVATE);
+//        isTimerOn = preferences.getBoolean("TimerOn", false);
     }
 
     public void startTimer() {
         int delay = 1000 * freq;
 
-        if(delay>60000) {
+        if (delay > 60000) {
             String toastinfo = String.valueOf(delay / 60000) + getString(R.string.nxtremmintoast);
             //Toast.makeText(this, getString(R.string.nxtremtoast) + toastinfo, Toast.LENGTH_SHORT).show();
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             am.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                    SystemClock.elapsedRealtime() + delay, pi );
-        }
-        else{
-            am.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime()
-                    + delay, pi );
+                    SystemClock.elapsedRealtime() + delay, pi);
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                am.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime()
+                        + delay, pi);
+            }else {
+                am.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime()
+                        + delay, pi );
+            }
         }
 
         if (!animrunning) {
@@ -468,18 +506,24 @@ public class MainActivity extends AppCompatActivity implements
             });
             toggle.startAnimation(fade_in);
             animrunning = true;
-            isTimerOn = true;
+
         }
+
+        isTimerOn = true;
+        SharedPreferences preferences = getSharedPreferences("TimerOn", MODE_PRIVATE);
+        preferences.edit().putBoolean("TimerOn", isTimerOn).commit();
     }
 
     public void stopTimer(boolean stopanim) {
-        if(am!=null){
-            if(pi!=null){
+        if (am != null) {
+            if (pi != null) {
                 am.cancel(pi);
                 isTimerOn = false;
+                SharedPreferences preferences = getSharedPreferences("TimerOn", MODE_PRIVATE);
+                preferences.edit().putBoolean("TimerOn", isTimerOn).commit();
             }
         }
-        if(stopanim) {
+        if (stopanim) {
             final ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButtonStartStop);
             toggle.clearAnimation();
         }
@@ -497,14 +541,17 @@ public class MainActivity extends AppCompatActivity implements
                     Calendar calendar = Calendar.getInstance();
                     //calendar.set(Calendar.HOUR_OF_DAY, 17);
                     int hour = calendar.get(Calendar.HOUR_OF_DAY);
-                    boolean day = (hour<22) && (hour>5);
-                    if (day){enabled = true;}
+                    boolean day = (hour < 22) && (hour > 5);
+                    if (day) {
+                        enabled = true;
+                    }
+                } else {
+                    enabled = true;
                 }
-                else {enabled = true;}
 
                 if (enabled) {
                     PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-                    PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK |
+                    PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK |
                             PowerManager.ACQUIRE_CAUSES_WAKEUP, "AshtavakraAppTag");
                     wl.acquire();
 
@@ -519,40 +566,38 @@ public class MainActivity extends AppCompatActivity implements
                     stopTimer(false);
                     startTimer();//for next verse
                     wl.release();
-                }
-                else {//keep looping anyway
+                } else {//keep looping anyway
                     stopTimer(false);
                     startTimer();
                 }
 
             }
         };
-        registerReceiver(br, new IntentFilter("in.oormi.agita") );
-        pi = PendingIntent.getBroadcast( this, 0, new Intent("in.oormi.agita"), 0 );
-        am = (AlarmManager)(this.getSystemService( Context.ALARM_SERVICE ));
+        registerReceiver(br, new IntentFilter("in.oormi.agita"));
+        pi = PendingIntent.getBroadcast(this, 0, new Intent("in.oormi.agita"), 0);
+        am = (AlarmManager) (this.getSystemService(Context.ALARM_SERVICE));
     }
 
     @Override
     protected void onDestroy() {
-        if (tts!=null)tts.shutdown();
-        if (ttsHindi!=null)ttsHindi.shutdown();
+        StopTTS();
+        if (tts != null) tts.shutdown();
+        if (ttsHindi != null) ttsHindi.shutdown();
 
-        if(am!=null){
-            if(pi!=null){
+        if (am != null) {
+            if (pi != null) {
                 am.cancel(pi);
             }
         }
-        if(br!=null){
+        if (br != null) {
             unregisterReceiver(br);
         }
         super.onDestroy();
     }
 
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event)
-    {
-        switch(keyCode)
-        {
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
                 moveTaskToBack(true);
                 return true;
@@ -609,6 +654,10 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onLoadFinished(Loader<String> loader, String data) {
         Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
+        Verse = 0;
+        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+        Verse = preferences.getInt("LastVerse", 0); //restart at the last verse
+        ShowVerse(true);
     }
 
     @Override
@@ -686,7 +735,7 @@ public class MainActivity extends AppCompatActivity implements
         layout.setLayoutParams(params);
 
         layout.setGravity(Gravity.CLIP_VERTICAL);
-        layout.setPadding(10,10,10,10);
+        layout.setPadding(10, 10, 10, 10);
 
         final TextView tv = new TextView(this);
         tv.setText(R.string.jumptitle);
@@ -699,7 +748,7 @@ public class MainActivity extends AppCompatActivity implements
 
         final TextView tvChapter = new TextView(this);
         tvChapter.setText(R.string.gotochapter);
-        tvChapter.setPadding(80,10,10,10);
+        tvChapter.setPadding(80, 10, 10, 10);
         layout.addView(tvChapter);
 
         final SeekBar chapterBar = new SeekBar(this);
@@ -709,7 +758,7 @@ public class MainActivity extends AppCompatActivity implements
 
         final TextView tvVerse = new TextView(this);
         tvVerse.setText(R.string.versenum);
-        tvVerse.setPadding(80,10,10,10);
+        tvVerse.setPadding(80, 10, 10, 10);
         layout.addView(tvVerse);
 
         final SeekBar verseBar = new SeekBar(this);
@@ -734,7 +783,7 @@ public class MainActivity extends AppCompatActivity implements
         chapterBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                tvChapter.setText(getString(R.string.gotochapter)+ " " + String.valueOf(progress+1));
+                tvChapter.setText(getString(R.string.gotochapter) + " " + String.valueOf(progress + 1));
                 verseBar.setMax(chapMap[progress] - 1);
                 verseBar.setProgress(0);
             }
@@ -753,7 +802,7 @@ public class MainActivity extends AppCompatActivity implements
         verseBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                tvVerse.setText(getString(R.string.versenum) + " " + String.valueOf(progress+1));
+                tvVerse.setText(getString(R.string.versenum) + " " + String.valueOf(progress + 1));
             }
 
             @Override
@@ -782,8 +831,8 @@ public class MainActivity extends AppCompatActivity implements
 
     private void setGotoVerse(int nchap, int nverse) {
         int skip = 0;
-        for (int c=0;c<nchap;c++) skip = skip + chapMap[c];
-        Verse = 4 + skip + nverse + 2*nchap;
+        for (int c = 0; c < nchap; c++) skip = skip + chapMap[c];
+        Verse = 4 + skip + nverse + 2 * nchap;
     }
 
     private ShareActionProvider mShareActionProvider;
@@ -797,12 +846,12 @@ public class MainActivity extends AppCompatActivity implements
         MenuItem item = menu.findItem(R.id.menu_item_share);
 
         // Fetch and store ShareActionProvider
-        mShareActionProvider = (ShareActionProvider)  MenuItemCompat.getActionProvider(item);
+        mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
         shareIntent.putExtra(Intent.EXTRA_TEXT,
                 "https://play.google.com/store/apps/details?id=in.oormi.avadhutagita");
-        shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Check out this app!");
+        shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getString(R.string.shareSubject));
         setShareIntent(shareIntent);
         return true;
     }
@@ -816,6 +865,12 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.mute:
+                StopTTS();
+                ttsenable = !ttsenable;
+                if (ttsenable) item.setIcon(android.R.drawable.ic_lock_silent_mode_off);
+                else item.setIcon(android.R.drawable.ic_lock_silent_mode);
+                break;
             case R.id.gotoverse:
                 gotoDialog();
                 break;

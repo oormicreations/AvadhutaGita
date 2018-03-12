@@ -3,28 +3,34 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:title="@string/go_to_verse"
+        android:id="@+id/mute"
+        android:icon="@android:drawable/ic_lock_silent_mode_off"
+        android:orderInCategory="103"
+        android:title="@string/menu_mute"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/gotoverse"
         android:icon="@android:drawable/ic_input_get"
         android:orderInCategory="101"
-        app:showAsAction="never"/>
+        android:title="@string/go_to_verse"
+        app:showAsAction="never" />
     <item
-        android:title="@string/settings"
         android:id="@+id/settings"
         android:icon="@android:drawable/ic_menu_preferences"
         android:orderInCategory="102"
-        app:showAsAction="never"/>
+        android:title="@string/settings"
+        app:showAsAction="never" />
     <item
-        android:title="@string/menu_name_info"
         android:id="@+id/info"
         android:icon="@android:drawable/ic_dialog_info"
         android:orderInCategory="103"
-        app:showAsAction="never"/>
+        android:title="@string/menu_name_info"
+        app:showAsAction="never" />
     <item
         android:id="@+id/menu_item_share"
-        app:showAsAction="never"
-        android:title="Share"
         android:orderInCategory="104"
-        app:actionProviderClass="android.support.v7.widget.ShareActionProvider" />
+        android:title="Share"
+        app:actionProviderClass="android.support.v7.widget.ShareActionProvider"
+        app:showAsAction="never" />
 </menu>
 
