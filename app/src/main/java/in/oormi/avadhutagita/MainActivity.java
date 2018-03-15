@@ -272,85 +272,16 @@ public class MainActivity extends AppCompatActivity implements
         PreferenceManager.setDefaultValues(this, R.xml.pref_headers, false);
         PreferenceManager.setDefaultValues(this, R.xml.pref_notification, false);
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-
-        alerttone = prefs.getString("notifications_new_message_ringtone",
-                "content://settings/system/notification_sound");
-        soundenable = prefs.getBoolean("notifications_tone", false);
-        alertenable = prefs.getBoolean("notifications_new_message", true);
-        vibeenable = prefs.getBoolean("notifications_new_message_vibrate", false);
-        ttsenable = prefs.getBoolean("notifications_new_message_speak", true);
-
-        speechrate = 1.0f;
-        String strrate = prefs.getString("rate_list", "1");
-        if ((strrate == null) || (strrate.length() < 1)) strrate = "1";
-        if (strrate.equals("0")) speechrate = 0.85f;
-        if (strrate.equals("1")) speechrate = 1.0f;
-        if (strrate.equals("2")) speechrate = 1.25f;
-
-        String localestr = prefs.getString("locale_list", "0");
-        if ((localestr == null) || (localestr.length() < 1)) localestr = "0";
-        if (localestr.equals("0")) locale = Locale.getDefault();
-        if (localestr.equals("1")) locale = Locale.US;
-        if (localestr.equals("2")) locale = Locale.UK;
-
-        String langstr = prefs.getString("lang_list", "2");
-        if ((langstr == null) || (langstr.length() < 1)) langstr = "2";
-        if (langstr.equals("0")) lang = 0;
-        if (langstr.equals("1")) lang = 1;
-        if (langstr.equals("2")) lang = 2;
-
-        freqStr = prefs.getString("freq_list", "60");
-        if (freqStr.length() < 1) freqStr = "60";
-        freq = 60 * Integer.parseInt(freqStr);
-        freqStr = freqStr + getString(R.string.nxtremmintoast);
-
-        nonightrem = prefs.getBoolean("night_switch", true);
-        if (freq < 1) {
-            freq = 20;
-            freqStr = getString(R.string.autoreadtimedisp);
-            nonightrem = false;//autoread in night too
-        }
-
-        automode = prefs.getBoolean("auto_switch", false);
-        if (automode) {
-            nonightrem = false;//autoread in night too
-            freq = 20;
-        }
-        String srandenable = prefs.getString("order_list", "0");
-        randenable = Integer.parseInt(srandenable);
-
         animation1 = AnimationUtils.loadAnimation(MainActivity.this, R.anim.remzoom);
         animation2 = AnimationUtils.loadAnimation(MainActivity.this, R.anim.fromleft);
         animation3 = AnimationUtils.loadAnimation(MainActivity.this, R.anim.fromright);
         animation4 = AnimationUtils.loadAnimation(MainActivity.this, R.anim.press);
-
- /*       if (ttsenable) {
-            tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
-                @Override
-                public void onInit(int status) {
-                    if (status == TextToSpeech.SUCCESS) {
-                        int result = tts.setLanguage(Locale.UK);
-                        if (result == TextToSpeech.LANG_MISSING_DATA ||
-                                result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                            Log.e("TTS Error", "This language is not supported");
-                        } else {
-                            tts.setSpeechRate(speechrate);
-                            //tts.speak(getString(R.string.ttswelcome), TextToSpeech.QUEUE_FLUSH, null,
-                            //        TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
-                        }
-                    } else
-                        Log.e("TTS Error", "Initialization Failed!");
-                }
-            });
-        }*/
 
         tv1 = (TextView) findViewById(R.id.textwhosaid);
         tv2 = (TextView) findViewById(R.id.textversenum);
         tv3 = (TextView) findViewById(R.id.textverse);
         tv4 = (TextView) findViewById(R.id.textViewComments);
         sv = (ScrollView) findViewById(R.id.scrollViewVc);
-
     }
 
     private void SoundAlert(final String speakme, final boolean hindi) {
@@ -461,8 +392,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-//        SharedPreferences preferences = getSharedPreferences("TimerOn", MODE_PRIVATE);
-//        isTimerOn = preferences.getBoolean("TimerOn", false);
+        UpdateSettings();
     }
 
     public void startTimer() {
@@ -574,7 +504,8 @@ public class MainActivity extends AppCompatActivity implements
             }
         };
         registerReceiver(br, new IntentFilter("in.oormi.agita"));
-        pi = PendingIntent.getBroadcast(this, 0, new Intent("in.oormi.agita"), 0);
+        pi = PendingIntent.getBroadcast(this, 0,
+                new Intent("in.oormi.agita"), 0);
         am = (AlarmManager) (this.getSystemService(Context.ALARM_SERVICE));
     }
 
@@ -723,6 +654,19 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    /////////////
+
+
+
+
+    //space for line num matching with A gita code
+
+
+
+
+
+    ///////////
+
     private void gotoDialog() {
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
@@ -851,7 +795,8 @@ public class MainActivity extends AppCompatActivity implements
         shareIntent.setType("text/plain");
         shareIntent.putExtra(Intent.EXTRA_TEXT,
                 "https://play.google.com/store/apps/details?id=in.oormi.avadhutagita");
-        shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getString(R.string.shareSubject));
+        shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
+                getString(R.string.shareSubject));
         setShareIntent(shareIntent);
         return true;
     }
@@ -884,5 +829,55 @@ public class MainActivity extends AppCompatActivity implements
                 break;
         }
         return true;
+    }
+
+    private void UpdateSettings() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+
+        alerttone = prefs.getString("notifications_new_message_ringtone",
+                "content://settings/system/notification_sound");
+        soundenable = prefs.getBoolean("notifications_tone", false);
+        alertenable = prefs.getBoolean("notifications_new_message", true);
+        vibeenable = prefs.getBoolean("notifications_new_message_vibrate", false);
+        ttsenable = prefs.getBoolean("notifications_new_message_speak", true);
+
+        speechrate = 1.0f;
+        String strrate = prefs.getString("rate_list", "1");
+        if ((strrate == null) || (strrate.length() < 1)) strrate = "1";
+        if (strrate.equals("0")) speechrate = 0.85f;
+        if (strrate.equals("1")) speechrate = 1.0f;
+        if (strrate.equals("2")) speechrate = 1.25f;
+
+        String localestr = prefs.getString("locale_list", "0");
+        if ((localestr == null) || (localestr.length() < 1)) localestr = "0";
+        if (localestr.equals("0")) locale = Locale.getDefault();
+        if (localestr.equals("1")) locale = Locale.US;
+        if (localestr.equals("2")) locale = Locale.UK;
+
+        String langstr = prefs.getString("lang_list", "2");
+        if ((langstr == null) || (langstr.length() < 1)) langstr = "2";
+        if (langstr.equals("0")) lang = 0;
+        if (langstr.equals("1")) lang = 1;
+        if (langstr.equals("2")) lang = 2;
+
+        freqStr = prefs.getString("freq_list", "60");
+        if (freqStr.length() < 1) freqStr = "60";
+        freq = 60 * Integer.parseInt(freqStr);
+        freqStr = freqStr + getString(R.string.nxtremmintoast);
+
+        nonightrem = prefs.getBoolean("night_switch", true);
+        if (freq < 1) {
+            freq = 20;
+            freqStr = getString(R.string.autoreadtimedisp);
+            nonightrem = false;//autoread in night too
+        }
+
+        automode = prefs.getBoolean("auto_switch", false);
+        if (automode) {
+            nonightrem = false;//autoread in night too
+            freq = 20;
+        }
+        String srandenable = prefs.getString("order_list", "0");
+        randenable = Integer.parseInt(srandenable);
     }
 }
